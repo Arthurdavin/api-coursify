@@ -10,4 +10,5 @@ import java.util.List;
 public interface LessonRepository extends JpaRepository<Lesson, Long> {
     List<Lesson> findByCourse_Id(Long courseId);
     int countByCourse_Id(Long courseId);
+    void deleteAllByCourseId(Long courseId);
 }

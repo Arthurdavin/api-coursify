@@ -5,10 +5,12 @@ import com.coursify.domain.Category;
 import com.coursify.domain.Role;
 import com.coursify.domain.User;
 import com.coursify.dto.request.CreateBookRequest;
+import com.coursify.dto.request.UpdateBookRequest;
 import com.coursify.dto.response.BookResponse;
 import com.coursify.exception.ResourceNotFoundException;
 import com.coursify.exception.UnauthorizedException;
 import com.coursify.repository.BookRepository;
+import com.coursify.repository.BookmarkedBookRepository;
 import com.coursify.repository.CategoryRepository;
 import com.coursify.repository.UserRepository;
 import com.coursify.service.BookService;
@@ -19,13 +21,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class BookServiceImpl implements BookService {
 
     private final BookRepository bookRepository;
+    private final BookmarkedBookRepository bookmarkedBookRepository; // ← add this
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
 
@@ -72,28 +74,28 @@ public class BookServiceImpl implements BookService {
     @Transactional(readOnly = true)
     public List<BookResponse> getBooksByCategory(Long categoryId) {
         return bookRepository.findByCategoryId(categoryId)
-                .stream().map(this::toResponse).collect(Collectors.toList());
+                .stream().map(this::toResponse).toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<BookResponse> getMyBooks(Long userId) {
         return bookRepository.findByUploadedBy_Id(userId)
-                .stream().map(this::toResponse).collect(Collectors.toList());
+                .stream().map(this::toResponse).toList();
     }
 
     @Override
     @Transactional
-    public BookResponse updateBook(Long id, CreateBookRequest request, Long userId) {
+    public BookResponse updateBook(Long id, UpdateBookRequest request, Long userId) {
         Book book = bookRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Book", id));
         assertOwnerOrAdmin(book, userId);
 
-        book.setTitle(request.title().trim());
+        if (request.title() != null) book.setTitle(request.title().trim());
         if (request.description() != null) book.setDescription(request.description());
         if (request.file_url() != null) book.setFileUrl(request.file_url());
         if (request.thumbnail() != null) book.setThumbnail(request.thumbnail());
-        if (request.category_ids() != null) {
+        if (request.category_ids() != null && !request.category_ids().isEmpty()) {
             book.setCategories(categoryRepository.findAllById(request.category_ids()));
         }
 
@@ -106,6 +108,8 @@ public class BookServiceImpl implements BookService {
         Book book = bookRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Book", id));
         assertOwnerOrAdmin(book, userId);
+
+        bookmarkedBookRepository.deleteAllByBook(book); // ← delete bookmarks first
         bookRepository.delete(book);
     }
 
@@ -121,7 +125,7 @@ public class BookServiceImpl implements BookService {
     private BookResponse toResponse(Book book) {
         List<String> categoryNames = book.getCategories().stream()
                 .map(Category::getName)
-                .collect(Collectors.toList());
+                .toList();
 
         return new BookResponse(
                 book.getId(),

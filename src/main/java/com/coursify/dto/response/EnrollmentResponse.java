@@ -1,6 +1,6 @@
 package com.coursify.dto.response;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 public record EnrollmentResponse(
         Long id,
@@ -9,5 +9,5 @@ public record EnrollmentResponse(
         Long courseId,
         String courseTitle,
         String status,
-        Timestamp enrolledAt
+        LocalDateTime enrolledAt
 ) {}

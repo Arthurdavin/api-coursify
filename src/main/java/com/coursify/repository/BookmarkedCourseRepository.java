@@ -12,4 +12,5 @@ public interface BookmarkedCourseRepository extends JpaRepository<BookmarkedCour
     List<BookmarkedCourse> findByUser_Id(Long userId);
     boolean existsByUser_IdAndCourse_Id(Long userId, Long courseId);
     void deleteByUser_IdAndCourse_Id(Long userId, Long courseId);
+    void deleteAllByCourseId(Long courseId);
 }

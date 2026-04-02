@@ -113,7 +113,7 @@ public class LessonServiceImpl implements LessonService {
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) return false;
         if (user.getRole() == Role.ADMIN || user.getRole() == Role.TEACHER) return true;
-        return enrollmentRepository.existsByStudent_IdAndCourse_Id(userId, courseId);
+        return enrollmentRepository.existsByCourseIdAndStudentId(userId, courseId);
     }
 
     private Course getCourseOrThrow(Long courseId) {

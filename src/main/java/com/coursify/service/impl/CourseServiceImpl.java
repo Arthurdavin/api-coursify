@@ -28,6 +28,8 @@ public class CourseServiceImpl implements CourseService {
     private final CategoryRepository categoryRepository;
     private final TagRepository tagRepository;
     private final LessonRepository lessonRepository;
+    private final EnrollmentRepository enrollmentRepository;           // 👈 add
+    private final BookmarkedCourseRepository bookmarkedCourseRepository; // 👈 add
 
     @Override
     @Transactional
@@ -50,7 +52,6 @@ public class CourseServiceImpl implements CourseService {
 
         courseRepository.save(course);
 
-        // Handle tags
         if (request.tags() != null && !request.tags().isEmpty()) {
             List<CourseTag> courseTags = new ArrayList<>();
             for (String tagName : request.tags()) {
@@ -62,7 +63,6 @@ public class CourseServiceImpl implements CourseService {
             course.setCourseTags(courseTags);
         }
 
-        // Handle embedded lessons
         if (request.lessons() != null && !request.lessons().isEmpty()) {
             List<Lesson> lessons = request.lessons().stream().map(l ->
                     Lesson.builder()
@@ -91,10 +91,22 @@ public class CourseServiceImpl implements CourseService {
         if (request.imageUrl() != null) course.setImageUrl(request.imageUrl());
         if (request.price() != null) course.setPrice(request.price());
         if (request.isPublished() != null) course.setIsPublished(request.isPublished());
+
         if (request.categoryId() != null) {
             Category category = categoryRepository.findById(request.categoryId())
                     .orElseThrow(() -> new ResourceNotFoundException("Category", request.categoryId()));
             course.setCategory(category);
+        }
+
+        if (request.tags() != null && !request.tags().isEmpty()) {
+            List<CourseTag> courseTags = new ArrayList<>();
+            for (String tagName : request.tags()) {
+                Tag tag = tagRepository.findByNameIgnoreCase(tagName.trim())
+                        .orElseGet(() -> tagRepository.save(
+                                Tag.builder().name(tagName.trim()).build()));
+                courseTags.add(CourseTag.builder().course(course).tag(tag).build());
+            }
+            course.setCourseTags(courseTags);
         }
 
         return toResponse(courseRepository.save(course));
@@ -105,6 +117,12 @@ public class CourseServiceImpl implements CourseService {
     public void deleteCourse(Long courseId, Long requesterId) {
         Course course = getCourseOrThrow(courseId);
         assertOwnerOrAdmin(course, requesterId);
+
+        // Delete dependent records first to avoid FK violations
+        bookmarkedCourseRepository.deleteAllByCourseId(courseId); // 👈
+        enrollmentRepository.deleteAllByCourseId(courseId);       // 👈
+        lessonRepository.deleteAllByCourseId(courseId);           // 👈
+
         courseRepository.delete(course);
     }
 

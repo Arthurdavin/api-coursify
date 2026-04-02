@@ -1,15 +1,17 @@
 package com.coursify.domain;
 
+import com.coursify.domain.enums.EnrollmentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "enrollments",
-       uniqueConstraints = @UniqueConstraint(columnNames = {"student_id", "course_id"}))
-@Data
+        uniqueConstraints = @UniqueConstraint(columnNames = {"student_id", "course_id"}))
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -29,9 +31,10 @@ public class Enrollment {
 
     @CreationTimestamp
     @Column(name = "enrolled_at", updatable = false)
-    private Timestamp enrolledAt;
+    private LocalDateTime enrolledAt;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
-    private String status = "ACTIVE";
+    private EnrollmentStatus status = EnrollmentStatus.ACTIVE;
 }

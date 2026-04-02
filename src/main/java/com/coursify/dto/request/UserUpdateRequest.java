@@ -1,11 +1,11 @@
 package com.coursify.dto.request;
 
-import lombok.Data;
-
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class UserUpdateRequest {
     @NotBlank(message = "First name is required")
     private String firstName;

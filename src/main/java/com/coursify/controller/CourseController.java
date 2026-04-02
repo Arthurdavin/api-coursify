@@ -5,6 +5,7 @@ import com.coursify.dto.request.CreateCourseRequest;
 import com.coursify.dto.request.UpdateCourseRequest;
 import com.coursify.dto.response.CourseResponse;
 import com.coursify.service.CourseService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -28,6 +29,7 @@ public class CourseController {
     // ── Public ──────────────────────────────────────────────────────────────
 
     @GetMapping
+    @Operation(summary = "Get all published courses, search by keyword, or filter by category")
     public ResponseEntity<Page<CourseResponse>> getAllCourses(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Long categoryId,
@@ -43,6 +45,7 @@ public class CourseController {
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Get a course by ID")
     public ResponseEntity<CourseResponse> getCourse(@PathVariable Long id) {
         return ResponseEntity.ok(courseService.getCourseById(id));
     }
@@ -50,6 +53,7 @@ public class CourseController {
     // ── Teacher ─────────────────────────────────────────────────────────────
 
     @PostMapping
+    @Operation(summary = "Create a new course")
     @PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
     public ResponseEntity<CourseResponse> createCourse(
             @Valid @RequestBody CreateCourseRequest request,
@@ -58,7 +62,8 @@ public class CourseController {
                 .body(courseService.createCourse(request, currentUser.getId()));
     }
 
-    @PutMapping("/{id}")
+    @PatchMapping("/{id}")
+    @Operation(summary = "Partially update a course (only provided fields are updated)")
     @PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
     public ResponseEntity<CourseResponse> updateCourse(
             @PathVariable Long id,
@@ -68,6 +73,7 @@ public class CourseController {
     }
 
     @PatchMapping("/{id}/publish")
+    @Operation(summary = "Publish a course")
     @PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
     public ResponseEntity<CourseResponse> publishCourse(
             @PathVariable Long id,
@@ -76,6 +82,7 @@ public class CourseController {
     }
 
     @DeleteMapping("/{id}")
+    @Operation(summary = "Delete a course")
     @PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
     public ResponseEntity<Void> deleteCourse(
             @PathVariable Long id,
@@ -87,8 +94,10 @@ public class CourseController {
     // ── Teacher: own courses ─────────────────────────────────────────────────
 
     @GetMapping("/my-courses")
+    @Operation(summary = "Get courses created by the current teacher")
     @PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
-    public ResponseEntity<List<CourseResponse>> getMyCourses(@AuthenticationPrincipal User currentUser) {
+    public ResponseEntity<List<CourseResponse>> getMyCourses(
+            @AuthenticationPrincipal User currentUser) {
         return ResponseEntity.ok(courseService.getCoursesByTeacher(currentUser.getId()));
     }
 }

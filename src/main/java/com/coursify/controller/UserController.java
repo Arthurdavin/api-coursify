@@ -48,12 +48,11 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    @PutMapping("/me")
+    @PatchMapping("/me")
     public ResponseEntity<UserResponse> updateProfile(
             @AuthenticationPrincipal User currentUser,
-            @Valid @RequestBody UserUpdateRequest request) {
-        UserResponse updated = userService.updateProfile(currentUser.getId(), request);
-        return ResponseEntity.ok(updated);
+            @RequestBody UserUpdateRequest request) {
+        return ResponseEntity.ok(userService.updateProfile(currentUser.getId(), request));
     }
 
 }

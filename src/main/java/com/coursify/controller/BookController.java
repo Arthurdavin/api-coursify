@@ -2,6 +2,7 @@ package com.coursify.controller;
 
 import com.coursify.domain.User;
 import com.coursify.dto.request.CreateBookRequest;
+import com.coursify.dto.request.UpdateBookRequest;
 import com.coursify.dto.response.BookResponse;
 import com.coursify.service.BookService;
 import jakarta.validation.Valid;
@@ -63,11 +64,11 @@ public class BookController {
                 .body(bookService.createBook(request, currentUser.getId()));
     }
 
-    @PutMapping("/{id}")
+    @PatchMapping("/{id}")
     @PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
     public ResponseEntity<BookResponse> updateBook(
             @PathVariable Long id,
-            @Valid @RequestBody CreateBookRequest request,
+            @RequestBody UpdateBookRequest request,
             @AuthenticationPrincipal User currentUser) {
         return ResponseEntity.ok(bookService.updateBook(id, request, currentUser.getId()));
     }

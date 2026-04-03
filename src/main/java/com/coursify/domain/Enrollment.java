@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "enrollments",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"student_id", "course_id"}))
+        uniqueConstraints = @UniqueConstraint(columnNames = {"course_id", "student_id"}))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -22,19 +22,23 @@ public class Enrollment {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "course_id", nullable = false)
+    private Course course;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "student_id", nullable = false)
     private User student;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private EnrollmentStatus status;
+
+    // null for free courses, set for paid enrollments
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "course_id", nullable = false)
-    private Course course;
+    @JoinColumn(name = "payment_id")
+    private Payment payment;
 
     @CreationTimestamp
     @Column(name = "enrolled_at", updatable = false)
     private LocalDateTime enrolledAt;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    @Builder.Default
-    private EnrollmentStatus status = EnrollmentStatus.ACTIVE;
 }

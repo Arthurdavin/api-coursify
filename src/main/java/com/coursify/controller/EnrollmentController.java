@@ -1,10 +1,8 @@
 package com.coursify.controller;
 
-import com.coursify.domain.enums.EnrollmentStatus;
 import com.coursify.dto.response.EnrollmentResponse;
 import com.coursify.service.EnrollmentService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import com.coursify.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -13,62 +11,71 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/enrollments")
+@RequestMapping("/api/v1/enrollments")
 @RequiredArgsConstructor
-@Tag(name = "Enrollment", description = "Enrollment management APIs")
 public class EnrollmentController {
 
     private final EnrollmentService enrollmentService;
 
-    @PostMapping("/{courseId}/enroll/{studentId}")
-    @Operation(summary = "Enroll a student in a course")
-    @PreAuthorize("hasAnyRole('STUDENT', 'ADMIN')")
-    public ResponseEntity<EnrollmentResponse> enroll(
-            @PathVariable Long courseId,
-            @PathVariable Long studentId) {
+    /**
+     * POST /api/v1/enrollments/{courseId}
+     *
+     * Enroll the current student in a FREE course.
+     * If the course is paid, this returns 400 with a message pointing to /payments/initiate.
+     */
+    @PostMapping("/{courseId}")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<EnrollmentResponse> enroll(@PathVariable Long courseId) {
+        Long studentId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(enrollmentService.enroll(courseId, studentId));
     }
 
-    @PatchMapping("/{enrollmentId}/cancel/{studentId}")
-    @Operation(summary = "Cancel an enrollment")
-    @PreAuthorize("hasAnyRole('STUDENT', 'ADMIN')")
-    public ResponseEntity<Void> cancel(
-            @PathVariable Long enrollmentId,
-            @PathVariable Long studentId) {
+    /**
+     * DELETE /api/v1/enrollments/{enrollmentId}
+     *
+     * Student cancels their own enrollment.
+     */
+    @DeleteMapping("/{enrollmentId}")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<Void> cancelEnrollment(@PathVariable Long enrollmentId) {
+        Long studentId = SecurityUtils.getCurrentUserId();
         enrollmentService.cancelEnrollment(enrollmentId, studentId);
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping("/{enrollmentId}/status")
-    @Operation(summary = "Update enrollment status (Admin only)")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> updateStatus(
-            @PathVariable Long enrollmentId,
-            @RequestParam EnrollmentStatus status) {
-        enrollmentService.updateStatus(enrollmentId, status);
-        return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/student/{studentId}")
-    @Operation(summary = "Get all enrollments for a student")
-    @PreAuthorize("hasAnyRole('STUDENT', 'ADMIN')")
-    public ResponseEntity<List<EnrollmentResponse>> getByStudent(@PathVariable Long studentId) {
+    /**
+     * GET /api/v1/enrollments/my
+     *
+     * Returns all enrollments for the current student.
+     */
+    @GetMapping("/my")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<List<EnrollmentResponse>> myEnrollments() {
+        Long studentId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(enrollmentService.getEnrollmentsByStudent(studentId));
     }
 
+    /**
+     * GET /api/v1/enrollments/course/{courseId}
+     *
+     * Returns all enrollments for a course (teacher/admin only).
+     */
     @GetMapping("/course/{courseId}")
-    @Operation(summary = "Get all enrollments for a course")
-    @PreAuthorize("hasAnyRole('INSTRUCTOR', 'ADMIN')")
-    public ResponseEntity<List<EnrollmentResponse>> getByCourse(@PathVariable Long courseId) {
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    public ResponseEntity<List<EnrollmentResponse>> enrollmentsByCourse(@PathVariable Long courseId) {
         return ResponseEntity.ok(enrollmentService.getEnrollmentsByCourse(courseId));
     }
 
-    @GetMapping("/check")
-    @Operation(summary = "Check if a student is enrolled in a course")
-    @PreAuthorize("hasAnyRole('STUDENT', 'ADMIN')")
-    public ResponseEntity<Boolean> isEnrolled(
-            @RequestParam Long courseId,
-            @RequestParam Long studentId) {
+    /**
+     * GET /api/v1/enrollments/check/{courseId}
+     *
+     * Quick check: is the current student enrolled in this course?
+     * Frontend uses this to show "Continue learning" vs "Enroll" button.
+     */
+    @GetMapping("/check/{courseId}")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<Boolean> isEnrolled(@PathVariable Long courseId) {
+        Long studentId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(enrollmentService.isEnrolled(courseId, studentId));
     }
 }

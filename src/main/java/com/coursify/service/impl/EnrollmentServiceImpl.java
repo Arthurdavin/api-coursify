@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -22,18 +23,34 @@ import java.util.List;
 public class EnrollmentServiceImpl implements EnrollmentService {
 
     private final EnrollmentRepository enrollmentRepository;
-    private final CourseRepository courseRepository;
-    private final UserRepository userRepository;
+    private final CourseRepository     courseRepository;
+    private final UserRepository       userRepository;
 
+    /**
+     * Enroll a student in a FREE course only.
+     * Paid courses must go through PaymentService → Bakong → webhook → enrollAfterPayment.
+     */
     @Override
     @Transactional
     public EnrollmentResponse enroll(Long courseId, Long studentId) {
-        if (enrollmentRepository.existsByCourseIdAndStudentId(courseId, studentId)) {
-            throw new BadRequestException("Student is already enrolled in this course.");
-        }
-
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
+
+        // Must be published
+        if (!course.getIsPublished()) {
+            throw new BadRequestException("This course is not currently available.");
+        }
+
+        // Block paid courses — they must go through payment flow
+        if (course.getPrice() != null && course.getPrice().compareTo(BigDecimal.ZERO) > 0) {
+            throw new BadRequestException(
+                    "This course requires payment. Please use the payment endpoint.");
+        }
+
+        // Duplicate check
+        if (enrollmentRepository.existsByCourseIdAndStudentId(courseId, studentId)) {
+            throw new BadRequestException("You are already enrolled in this course.");
+        }
 
         User student = userRepository.findById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + studentId));
@@ -42,6 +59,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
                 .course(course)
                 .student(student)
                 .status(EnrollmentStatus.ACTIVE)
+                .payment(null)  // no payment for free courses
                 .build();
 
         return toResponse(enrollmentRepository.save(enrollment));

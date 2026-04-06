@@ -24,6 +24,7 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Getter(AccessLevel.NONE) // Prevent Lombok from generating getUsername()
     @Column(nullable = false, unique = true)
     private String username;
 
@@ -61,9 +62,20 @@ public class User implements UserDetails {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
+    // Spring Security uses this for authentication — must return email
     @Override
     public String getUsername() {
-        return email; // instead of username
+        return email;
+    }
+
+    // Explicit getter for the actual username field
+    public String getUsernameField() {
+        return username;
+    }
+
+    // Explicit setter for the username field (since Lombok's setter is also blocked by @Getter(NONE))
+    public void setUsernameField(String username) {
+        this.username = username;
     }
 
     @Override

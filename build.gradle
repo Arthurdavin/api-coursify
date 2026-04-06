@@ -93,6 +93,9 @@ repositories {
 }
 
 dependencies {
+
+    implementation 'com.resend:resend-java:3.1.0'
+
 //    config to .env file
     developmentOnly 'me.paulschwarz:spring-dotenv:4.0.0'
     // ── Web ─────────────────────────────────────────────────────────────────

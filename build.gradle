@@ -94,6 +94,15 @@ repositories {
 
 dependencies {
 
+    implementation 'kh.gov.nbc.bakong_khqr:sdk-java:1.0.0.16'
+
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+// QR code image generation
+    implementation 'com.google.zxing:core:3.5.3'
+    implementation 'com.google.zxing:javase:3.5.3'
+    // JSON & Validation
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+
     implementation 'com.resend:resend-java:3.1.0'
 
 //    config to .env file

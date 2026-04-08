@@ -35,6 +35,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
                         // ── Swagger / OpenAPI ───────────────────────────────
+                        // Stateless mean api not pass long term that need to login again if reload
                         .requestMatchers(
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",

@@ -2,6 +2,8 @@ package com.coursify.service;
 
 import com.coursify.dto.request.UserUpdateRequest;
 import com.coursify.dto.response.UserResponse;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 

@@ -10,5 +10,6 @@ public record UpdateCourseRequest(
         BigDecimal price,
         Boolean isPublished,
         Long categoryId,
-        List<String> tags
+        List<String> tags,
+        List<LessonInCourseRequest> lessons  // ← add this
 ) {}

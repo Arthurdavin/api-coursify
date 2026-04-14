@@ -8,6 +8,8 @@ public record EnrollmentResponse(
         String studentUsername,
         Long courseId,
         String courseTitle,
+        String courseImageUrl,      // was courseThumbnail
+        String instructorName,
         String status,
         LocalDateTime enrolledAt
 ) {}

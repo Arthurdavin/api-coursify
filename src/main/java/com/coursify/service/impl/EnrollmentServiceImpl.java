@@ -126,6 +126,12 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         return courseService.getCourseById(courseId);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public long countEnrollmentsByTeacher(Long teacherId) {
+        return enrollmentRepository.countByCourseTeacherId(teacherId);
+    }
+
     private EnrollmentResponse toResponse(Enrollment enrollment) {
         return new EnrollmentResponse(
                 enrollment.getId(),

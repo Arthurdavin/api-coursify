@@ -38,4 +38,5 @@ public interface EnrollmentService {
 
     /** Returns full course detail (with lessons) only if student is enrolled */
     CourseResponse getEnrolledCourseDetail(Long courseId, Long studentId);
+    long countEnrollmentsByTeacher(Long teacherId);
 }

@@ -10,6 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/enrollments")
@@ -85,6 +86,14 @@ public class EnrollmentController {
     public ResponseEntity<CourseResponse> getEnrolledCourseDetail(@PathVariable Long courseId) {
         Long studentId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(enrollmentService.getEnrolledCourseDetail(courseId, studentId));
+    }
+
+    @GetMapping("/teacher/stats")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<Map<String, Long>> getTeacherStats() {
+        Long teacherId = SecurityUtils.getCurrentUserId();
+        long totalEnrollments = enrollmentService.countEnrollmentsByTeacher(teacherId);
+        return ResponseEntity.ok(Map.of("totalEnrollments", totalEnrollments));
     }
 
 }

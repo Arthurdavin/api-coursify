@@ -91,6 +91,8 @@ import com.coursify.repository.EnrollmentRepository;
 import com.coursify.repository.UserRepository;
 import com.coursify.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -153,6 +155,13 @@ public class UserServiceImpl implements UserService {
         if (request.getBgImageUrl() != null) user.setBgImageUrl(request.getBgImageUrl());
 
         return toResponse(userRepository.save(user));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<UserResponse> getUsersByRole(Role role, Pageable pageable) {
+        return userRepository.findByRole(role, pageable)
+                .map(this::toResponse);
     }
 
     private UserResponse toResponse(User u) {

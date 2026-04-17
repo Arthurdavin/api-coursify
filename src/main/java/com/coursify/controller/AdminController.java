@@ -42,11 +42,11 @@
 
 package com.coursify.controller;
 
+import com.coursify.domain.Role;
 import com.coursify.domain.User;
 import com.coursify.dto.request.CreateBookRequest;
 import com.coursify.dto.request.UpdateBookRequest;
-import com.coursify.dto.response.BookResponse;
-import com.coursify.dto.response.DashboardStatsResponse;
+import com.coursify.dto.response.*;
 import com.coursify.service.AdminService;
 import com.coursify.service.BookService;
 import com.coursify.service.CourseService;
@@ -63,6 +63,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -90,6 +91,20 @@ public class AdminController {
         return ResponseEntity.noContent().build();
     }
 
+    // ── User Management ──────────────────────────────────────────────────────
+
+    @GetMapping("/users/students")
+    public ResponseEntity<Page<UserResponse>> getAllStudents(
+            @PageableDefault(size = 12, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(userService.getUsersByRole(Role.STUDENT, pageable));
+    }
+
+    @GetMapping("/users/teachers")
+    public ResponseEntity<Page<UserResponse>> getAllTeachers(
+            @PageableDefault(size = 12, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(userService.getUsersByRole(Role.TEACHER, pageable));
+    }
+
     // ── Course Management ────────────────────────────────────────────────────
 
     @DeleteMapping("/courses/{id}")
@@ -98,6 +113,18 @@ public class AdminController {
             @AuthenticationPrincipal User currentUser) {
         courseService.deleteCourse(id, currentUser.getId());
         return ResponseEntity.noContent().build();
+    }
+
+    // ── Course Management ────────────────────────────────────────────────────────
+
+    @GetMapping("/courses")
+    public ResponseEntity<Page<CourseResponse>> getAllCourses(
+            @RequestParam(required = false) String keyword,
+            @PageableDefault(size = 12, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        if (keyword != null && !keyword.isBlank()) {
+            return ResponseEntity.ok(courseService.searchCourses(keyword, pageable));
+        }
+        return ResponseEntity.ok(courseService.getAllCourses(pageable));
     }
 
     // ── Book Management ──────────────────────────────────────────────────────
@@ -140,4 +167,22 @@ public class AdminController {
         bookService.deleteBook(id, currentUser.getId());
         return ResponseEntity.noContent().build();
     }
+
+    // ── Chart Data ───────────────────────────────────────────────────────────────
+
+    @GetMapping("/stats/enrollment-trend")
+    public ResponseEntity<List<ChartDataResponse.EnrollmentTrend>> getEnrollmentTrend() {
+        return ResponseEntity.ok(adminService.getEnrollmentTrend());
+    }
+
+    @GetMapping("/stats/course-distribution")
+    public ResponseEntity<List<ChartDataResponse.CategoryDistribution>> getCourseDistribution() {
+        return ResponseEntity.ok(adminService.getCourseDistribution());
+    }
+
+    @GetMapping("/stats/teacher-status")
+    public ResponseEntity<List<ChartDataResponse.TeacherStatus>> getTeacherStatus() {
+        return ResponseEntity.ok(adminService.getTeacherStatus());
+    }
+
 }

@@ -146,16 +146,18 @@ public class CourseServiceImpl implements CourseService {
         return toResponse(getCourseOrThrow(courseId));
     }
 
+    // For public — searches published courses only
     @Override
     @Transactional(readOnly = true)
     public Page<CourseResponse> getAllPublishedCourses(Pageable pageable) {
         return courseRepository.findByIsPublishedTrue(pageable).map(this::toResponse);
     }
 
+    // For admin — searches all courses (published + unpublished)
     @Override
     @Transactional(readOnly = true)
     public Page<CourseResponse> searchCourses(String keyword, Pageable pageable) {
-        return courseRepository.searchByKeyword(keyword, pageable).map(this::toResponse);
+        return courseRepository.searchAllByKeyword(keyword, pageable).map(this::toResponse);
     }
 
     @Override
@@ -169,6 +171,15 @@ public class CourseServiceImpl implements CourseService {
     public List<CourseResponse> getCoursesByTeacher(Long teacherId) {
         return courseRepository.findByTeacher_Id(teacherId)
                 .stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<CourseResponse> getAllCourses(Pageable pageable) {
+        return courseRepository.findAll(pageable)
+                .map(this::toResponse);
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────

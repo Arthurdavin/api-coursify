@@ -18,4 +18,5 @@ public interface CourseService {
     Page<CourseResponse> searchCourses(String keyword, Pageable pageable);
     Page<CourseResponse> getCoursesByCategory(Long categoryId, Pageable pageable);
     List<CourseResponse> getCoursesByTeacher(Long teacherId);
+    Page<CourseResponse> getAllCourses(Pageable pageable);
 }

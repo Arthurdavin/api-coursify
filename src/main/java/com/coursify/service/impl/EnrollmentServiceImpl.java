@@ -34,6 +34,41 @@ public class EnrollmentServiceImpl implements EnrollmentService {
      * Enroll a student in a FREE course only.
      * Paid courses must go through PaymentService → Bakong → webhook → enrollAfterPayment.
      */
+//    @Override
+//    @Transactional
+//    public EnrollmentResponse enroll(Long courseId, Long studentId) {
+//        Course course = courseRepository.findById(courseId)
+//                .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
+//
+//        // Must be published
+//        if (!course.getIsPublished()) {
+//            throw new BadRequestException("This course is not currently available.");
+//        }
+//
+//        // Block paid courses — they must go through payment flow
+//        if (course.getPrice() != null && course.getPrice().compareTo(BigDecimal.ZERO) > 0) {
+//            throw new BadRequestException(
+//                    "This course requires payment. Please use the payment endpoint.");
+//        }
+//
+//        // Duplicate check
+//        if (enrollmentRepository.existsByCourseIdAndStudentId(courseId, studentId)) {
+//            throw new BadRequestException("You are already enrolled in this course.");
+//        }
+//
+//        User student = userRepository.findById(studentId)
+//                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + studentId));
+//
+//        Enrollment enrollment = Enrollment.builder()
+//                .course(course)
+//                .student(student)
+//                .status(EnrollmentStatus.ACTIVE)
+//                .payment(null)  // no payment for free courses
+//                .build();
+//
+//        return toResponse(enrollmentRepository.save(enrollment));
+//    }
+
     @Override
     @Transactional
     public EnrollmentResponse enroll(Long courseId, Long studentId) {
@@ -43,12 +78,6 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         // Must be published
         if (!course.getIsPublished()) {
             throw new BadRequestException("This course is not currently available.");
-        }
-
-        // Block paid courses — they must go through payment flow
-        if (course.getPrice() != null && course.getPrice().compareTo(BigDecimal.ZERO) > 0) {
-            throw new BadRequestException(
-                    "This course requires payment. Please use the payment endpoint.");
         }
 
         // Duplicate check
@@ -63,8 +92,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
                 .course(course)
                 .student(student)
                 .status(EnrollmentStatus.ACTIVE)
-                .payment(null)  // no payment for free courses
-                .build();
+                .build();  // removed .payment(null)
 
         return toResponse(enrollmentRepository.save(enrollment));
     }

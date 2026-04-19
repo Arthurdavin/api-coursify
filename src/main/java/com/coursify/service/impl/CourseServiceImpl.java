@@ -227,6 +227,7 @@ public class CourseServiceImpl implements CourseService {
                 course.getIsPublished(),
                 course.getTeacher().getId(),
                 course.getTeacher().getFirstName() + " " + course.getTeacher().getLastName(),
+                course.getTeacher().getImageUrl(),
                 course.getCategory() != null ? course.getCategory().getId() : null,
                 course.getCategory() != null ? course.getCategory().getName() : null,
                 tags,

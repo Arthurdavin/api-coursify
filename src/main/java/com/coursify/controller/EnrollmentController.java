@@ -25,6 +25,13 @@ public class EnrollmentController {
      * Enroll the current student in a FREE course.
      * If the course is paid, this returns 400 with a message pointing to /payments/initiate.
      */
+//    @PostMapping("/{courseId}")
+//    @PreAuthorize("hasRole('STUDENT')")
+//    public ResponseEntity<EnrollmentResponse> enroll(@PathVariable Long courseId) {
+//        Long studentId = SecurityUtils.getCurrentUserId();
+//        return ResponseEntity.ok(enrollmentService.enroll(courseId, studentId));
+//    }
+
     @PostMapping("/{courseId}")
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<EnrollmentResponse> enroll(@PathVariable Long courseId) {
@@ -76,9 +83,10 @@ public class EnrollmentController {
      */
     @GetMapping("/check/{courseId}")
     @PreAuthorize("hasRole('STUDENT')")
-    public ResponseEntity<Boolean> isEnrolled(@PathVariable Long courseId) {
+    public ResponseEntity<Map<String, Boolean>> isEnrolled(@PathVariable Long courseId) {
         Long studentId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(enrollmentService.isEnrolled(courseId, studentId));
+        boolean enrolled = enrollmentService.isEnrolled(courseId, studentId);
+        return ResponseEntity.ok(Map.of("isEnrolled", enrolled));
     }
 
     @GetMapping("/course/{courseId}/detail")

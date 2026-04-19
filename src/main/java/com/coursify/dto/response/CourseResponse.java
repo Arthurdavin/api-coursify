@@ -13,6 +13,7 @@ public record CourseResponse(
         Boolean isPublished,
         Long teacherId,
         String teacherName,
+        String teacherImageUrl,
         Long categoryId,
         String categoryName,
         List<String> tags,

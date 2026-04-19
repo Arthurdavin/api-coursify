@@ -3,6 +3,7 @@ package com.coursify.exception;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -27,6 +28,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleUnauthorized(UnauthorizedException ex) {
         return error(HttpStatus.FORBIDDEN, ex.getMessage());
     }
+
+//    @ExceptionHandler(BadRequestException.class)
+//    public ResponseEntity<ErrorResponse> handleBadRequest(BadRequestException ex) {
+//        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+//                .body(new ErrorResponse(ex.getMessage(), 400, LocalDateTime.now().toString()));
+//    }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneric(Exception ex) {

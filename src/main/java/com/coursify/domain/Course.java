@@ -12,10 +12,13 @@ import java.util.List;
 
 @Entity
 @Table(name = "courses")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EqualsAndHashCode(of = "id")
+@ToString(exclude = {"teacher", "category", "lessons", "courseTags"})
 public class Course {
 
     @Id

@@ -4,14 +4,17 @@ import com.coursify.domain.Course;
 import com.coursify.domain.Enrollment;
 import com.coursify.domain.User;
 import com.coursify.domain.enums.EnrollmentStatus;
+import com.coursify.dto.response.CourseResponse;
 import com.coursify.dto.response.EnrollmentResponse;
 import com.coursify.exception.BadRequestException;
 import com.coursify.exception.ResourceNotFoundException;
 import com.coursify.repository.CourseRepository;
 import com.coursify.repository.EnrollmentRepository;
 import com.coursify.repository.UserRepository;
+import com.coursify.service.CourseService;
 import com.coursify.service.EnrollmentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +28,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     private final EnrollmentRepository enrollmentRepository;
     private final CourseRepository     courseRepository;
     private final UserRepository       userRepository;
+    private final CourseService courseService;
 
     /**
      * Enroll a student in a FREE course only.
@@ -113,6 +117,21 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         return enrollmentRepository.existsByCourseIdAndStudentId(courseId, studentId);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public CourseResponse getEnrolledCourseDetail(Long courseId, Long studentId) {
+        if (!enrollmentRepository.existsByCourseIdAndStudentId(courseId, studentId)) {
+            throw new AccessDeniedException("You are not enrolled in this course.");
+        }
+        return courseService.getCourseById(courseId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countEnrollmentsByTeacher(Long teacherId) {
+        return enrollmentRepository.countByCourseTeacherId(teacherId);
+    }
+
     private EnrollmentResponse toResponse(Enrollment enrollment) {
         return new EnrollmentResponse(
                 enrollment.getId(),
@@ -120,6 +139,8 @@ public class EnrollmentServiceImpl implements EnrollmentService {
                 enrollment.getStudent().getUsername(),
                 enrollment.getCourse().getId(),
                 enrollment.getCourse().getTitle(),
+                enrollment.getCourse().getImageUrl(),                // was getThumbnail()
+                enrollment.getCourse().getTeacher().getUsername(),   // was getInstructor().getFullName()
                 enrollment.getStatus().name(),
                 enrollment.getEnrolledAt()
         );

@@ -28,8 +28,8 @@ public class CourseServiceImpl implements CourseService {
     private final CategoryRepository categoryRepository;
     private final TagRepository tagRepository;
     private final LessonRepository lessonRepository;
-    private final EnrollmentRepository enrollmentRepository;           // 👈 add
-    private final BookmarkedCourseRepository bookmarkedCourseRepository; // 👈 add
+    private final EnrollmentRepository enrollmentRepository;
+    private final BookmarkedCourseRepository bookmarkedCourseRepository;
 
     @Override
     @Transactional
@@ -53,14 +53,12 @@ public class CourseServiceImpl implements CourseService {
         courseRepository.save(course);
 
         if (request.tags() != null && !request.tags().isEmpty()) {
-            List<CourseTag> courseTags = new ArrayList<>();
             for (String tagName : request.tags()) {
                 Tag tag = tagRepository.findByNameIgnoreCase(tagName.trim())
                         .orElseGet(() -> tagRepository.save(
                                 Tag.builder().name(tagName.trim()).build()));
-                courseTags.add(CourseTag.builder().course(course).tag(tag).build());
+                course.getCourseTags().add(CourseTag.builder().course(course).tag(tag).build());
             }
-            course.setCourseTags(courseTags);
         }
 
         if (request.lessons() != null && !request.lessons().isEmpty()) {
@@ -73,7 +71,7 @@ public class CourseServiceImpl implements CourseService {
                             .build()
             ).collect(Collectors.toList());
             lessonRepository.saveAll(lessons);
-            course.setLessons(lessons);
+            course.getLessons().addAll(lessons);
         }
 
         courseRepository.save(course);
@@ -98,15 +96,23 @@ public class CourseServiceImpl implements CourseService {
             course.setCategory(category);
         }
 
-        if (request.tags() != null && !request.tags().isEmpty()) {
-            List<CourseTag> courseTags = new ArrayList<>();
-            for (String tagName : request.tags()) {
-                Tag tag = tagRepository.findByNameIgnoreCase(tagName.trim())
-                        .orElseGet(() -> tagRepository.save(
-                                Tag.builder().name(tagName.trim()).build()));
-                courseTags.add(CourseTag.builder().course(course).tag(tag).build());
-            }
-            course.setCourseTags(courseTags);
+        if (request.lessons() != null) {
+            // Delete old lessons and replace with new ones
+            lessonRepository.deleteAllByCourseId(courseId);
+            course.getLessons().clear();
+
+            List<Lesson> updatedLessons = request.lessons().stream()
+                    .filter(l -> l.title() != null && !l.title().isBlank())
+                    .map(l -> Lesson.builder()
+                            .title(l.title())
+                            .description(l.description() != null ? l.description() : "No description")
+                            .videoUrl(l.video_url())
+                            .course(course)
+                            .build())
+                    .collect(Collectors.toList());
+
+            lessonRepository.saveAll(updatedLessons);
+            course.getLessons().addAll(updatedLessons);
         }
 
         return toResponse(courseRepository.save(course));
@@ -118,10 +124,9 @@ public class CourseServiceImpl implements CourseService {
         Course course = getCourseOrThrow(courseId);
         assertOwnerOrAdmin(course, requesterId);
 
-        // Delete dependent records first to avoid FK violations
-        bookmarkedCourseRepository.deleteAllByCourseId(courseId); // 👈
-        enrollmentRepository.deleteAllByCourseId(courseId);       // 👈
-        lessonRepository.deleteAllByCourseId(courseId);           // 👈
+        bookmarkedCourseRepository.deleteAllByCourseId(courseId);
+        enrollmentRepository.deleteAllByCourseId(courseId);
+        lessonRepository.deleteAllByCourseId(courseId);
 
         courseRepository.delete(course);
     }
@@ -141,16 +146,18 @@ public class CourseServiceImpl implements CourseService {
         return toResponse(getCourseOrThrow(courseId));
     }
 
+    // For public — searches published courses only
     @Override
     @Transactional(readOnly = true)
     public Page<CourseResponse> getAllPublishedCourses(Pageable pageable) {
         return courseRepository.findByIsPublishedTrue(pageable).map(this::toResponse);
     }
 
+    // For admin — searches all courses (published + unpublished)
     @Override
     @Transactional(readOnly = true)
     public Page<CourseResponse> searchCourses(String keyword, Pageable pageable) {
-        return courseRepository.searchByKeyword(keyword, pageable).map(this::toResponse);
+        return courseRepository.searchAllByKeyword(keyword, pageable).map(this::toResponse);
     }
 
     @Override
@@ -164,6 +171,15 @@ public class CourseServiceImpl implements CourseService {
     public List<CourseResponse> getCoursesByTeacher(Long teacherId) {
         return courseRepository.findByTeacher_Id(teacherId)
                 .stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<CourseResponse> getAllCourses(Pageable pageable) {
+        return courseRepository.findAll(pageable)
+                .map(this::toResponse);
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────

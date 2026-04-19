@@ -1,5 +1,6 @@
 package com.coursify.controller;
 
+import com.coursify.dto.response.CourseResponse;
 import com.coursify.dto.response.EnrollmentResponse;
 import com.coursify.service.EnrollmentService;
 import com.coursify.util.SecurityUtils;
@@ -9,9 +10,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/enrollments")
+@RequestMapping("/api/enrollments")
 @RequiredArgsConstructor
 public class EnrollmentController {
 
@@ -78,4 +80,20 @@ public class EnrollmentController {
         Long studentId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(enrollmentService.isEnrolled(courseId, studentId));
     }
+
+    @GetMapping("/course/{courseId}/detail")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<CourseResponse> getEnrolledCourseDetail(@PathVariable Long courseId) {
+        Long studentId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(enrollmentService.getEnrolledCourseDetail(courseId, studentId));
+    }
+
+    @GetMapping("/teacher/stats")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<Map<String, Long>> getTeacherStats() {
+        Long teacherId = SecurityUtils.getCurrentUserId();
+        long totalEnrollments = enrollmentService.countEnrollmentsByTeacher(teacherId);
+        return ResponseEntity.ok(Map.of("totalEnrollments", totalEnrollments));
+    }
+
 }

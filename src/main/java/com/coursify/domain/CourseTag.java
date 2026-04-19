@@ -8,10 +8,13 @@ import java.io.Serializable;
 @Entity
 @Table(name = "course_tags")
 @IdClass(CourseTag.CourseTagId.class)
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EqualsAndHashCode(of = {})
+@ToString(exclude = {"course", "tag"})
 public class CourseTag {
 
     @Id
@@ -27,6 +30,7 @@ public class CourseTag {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @EqualsAndHashCode
     public static class CourseTagId implements Serializable {
         private Long course;
         private Long tag;

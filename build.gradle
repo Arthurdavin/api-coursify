@@ -94,6 +94,8 @@ repositories {
 
 dependencies {
 
+    implementation 'com.cloudinary:cloudinary-http44:1.36.0'
+
     implementation 'kh.gov.nbc.bakong_khqr:sdk-java:1.0.0.16'
 
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
